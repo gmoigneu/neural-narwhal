@@ -3,16 +3,18 @@
 ## Project Overview
 - **App Name**: Prompt Manager
 - **Platform**: Electron with Vite
-- **Primary Stack**: 
+- **Primary Stack**:
   - Electron for cross-platform desktop application
   - TanStack Router for client-side routing
   - TailwindCSS v4 for styling
   - Shadcn/ui for component library
-- **Key Features**: 
+- **Key Features**:
   - Prompt versioning
   - Prompt categories
   - Advanced search functionality
 - **Storage**: Local folder storage (user-selected) using Prompty specification
+- Package manager: pnpm
+- **Configuration Storage**: Uses `electron-store` for persistent application settings, managed in the main process.
 
 ## Core Requirements
 
@@ -89,16 +91,17 @@
 1. **Main Process (Electron)**
    - File system management
    - IPC communication coordination
-   - Configuration and settings storage
+   - Configuration and settings storage (e.g., vault path using `electron-store` in `src/main/index.ts`).
    - Application lifecycle management
-   - Native OS integration
+   - Native OS integration (e.g., `dialog.showOpenDialog` for folder selection).
 
 2. **Renderer Process (React)**
-   - User interface components
+   - User interface components (located in `src/renderer/src/components/`, main React entry point is `src/renderer/src/main.tsx`).
    - State management
    - Routing and navigation
    - Prompt editing and preview
    - Search and filtering logic
+   - Interacts with the main process via APIs exposed on `window.api` by the preload script.
 
 3. **Data Layer**
    - Prompty specification parser and validator
@@ -109,13 +112,19 @@
    - Partials resolution engine
    - Variable substitution system
 
+### Preload Script (`src/preload/index.ts`)
+  - Bridges the main and renderer processes by exposing specific functionalities.
+  - Uses `contextBridge.exposeInMainWorld('api', { ... })` to provide controlled IPC channels.
+  - For `ipcRenderer.on` listeners, it's good practice to return a cleanup function for easy removal in React `useEffect` hooks.
+  - Must have a corresponding type definition file (e.g., `src/renderer/src/preload.d.ts`) for TypeScript safety in the renderer.
+
 ### Module Organization
 1. **Core Modules**
    - `PromptStorage` - Manages reading/writing prompts to disk
    - `PromptIndex` - Handles search indexing and querying
    - `VersionControl` - Manages prompt versions and history
    - `CategoryManager` - Handles prompt organization
-   - `SettingsManager` - Manages user preferences and configuration
+   - `SettingsManager` - Manages user preferences and configuration (Partially implemented with `electron-store` in `src/main/index.ts` for vault path).
    - `PartialsManager` - Handles partial prompts resolution and tracking
    - `VariableManager` - Manages global and folder-level variables
 
@@ -150,17 +159,17 @@ model:
 sample:
   firstName: Seth
   context: >
-    The Alpine Explorer Tent boasts a detachable divider for privacy, 
-    numerous mesh windows and adjustable vents for ventilation, and 
-    a waterproof design. It even has a built-in gear loft for storing 
-    your outdoor essentials. In short, it's a blend of privacy, comfort, 
+    The Alpine Explorer Tent boasts a detachable divider for privacy,
+    numerous mesh windows and adjustable vents for ventilation, and
+    a waterproof design. It even has a built-in gear loft for storing
+    your outdoor essentials. In short, it's a blend of privacy, comfort,
     and convenience, making it your second home in the heart of nature!
   question: What can you tell me about your tents?
 ---
 
 system:
-You are an AI assistant who helps people find information. As the assistant, 
-you answer questions briefly, succinctly, and in a personable manner using 
+You are an AI assistant who helps people find information. As the assistant,
+you answer questions briefly, succinctly, and in a personable manner using
 markdown and even add some personal flair with appropriate emojis.
 
 # Customer
@@ -243,10 +252,13 @@ user:
 ### Code Quality Standards
 1. **TypeScript Usage**
    - Use TypeScript for all code with strict mode enabled
-   - Create comprehensive type definitions for all data structures
+   - Create comprehensive type definitions for all data structures, especially for preload script APIs (`src/renderer/src/preload.d.ts`).
    - Document complex types with JSDoc comments
    - Avoid using `any` type except where absolutely necessary
    - Use discriminated unions for complex state management
+   - For global type augmentations (like `Window` interface in `preload.d.ts`), ensure the `.d.ts` file is treated as a script (i.e., does not contain `export {}`).
+   - `tsconfig.node.json` is configured with `"moduleResolution": "nodenext"` and `"module": "nodenext"` for ESM module compatibility (e.g., with `electron-store`).
+   - `package.json` includes `"type": "module"`.
 
 2. **Component Architecture**
    - Follow atomic design principles (atoms, molecules, organisms, templates, pages)
@@ -303,8 +315,8 @@ user:
 
 ### Electron-Specific Best Practices
 1. **IPC Communication**
-   - Define clear message types for IPC
-   - Document all IPC messages and payloads
+   - Define clear message types for IPC (e.g., `invoke/handle` for `get-vault-path`, `select-native-folder`, `save-vault-directory`; `send/on` for `show-vault-setup-dialog`, `vault-ready`, `vault-set-success`).
+   - Document all IPC messages and payloads (implicitly via the `window.api` types in `preload.d.ts`).
    - Implement proper error handling for IPC failures
    - Minimize data transfer over IPC
    - Use typed interfaces for IPC messages
@@ -338,6 +350,13 @@ user:
    - Use consistent naming conventions
    - Create README files for complex modules
    - Document architecture decisions
+   - Key files:
+     - Main process: `src/main/index.ts`
+     - Renderer entry: `src/renderer/src/main.tsx`
+     - Preload script: `src/preload/index.ts`
+     - Preload script types: `src/renderer/src/preload.d.ts`
+     - Reusable UI components: `src/renderer/src/components/ui/`
+     - Feature-specific components: `src/renderer/src/components/`
 
 2. **Documentation Requirements**
    - Include JSDoc comments for all exports
