@@ -32,7 +32,7 @@ export function NavMain({
       url: string
     }[]
   }[]
-}) {
+}): React.JSX.Element {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>

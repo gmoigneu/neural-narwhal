@@ -18,7 +18,7 @@ export function NavSecondary({
     url: string
     icon: LucideIcon
   }[]
-} & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
+} & React.ComponentPropsWithoutRef<typeof SidebarGroup>): React.JSX.Element {
   return (
     <SidebarGroup {...props}>
       <SidebarGroupContent>

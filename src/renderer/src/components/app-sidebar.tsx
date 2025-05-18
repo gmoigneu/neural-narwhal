@@ -151,7 +151,7 @@ const data = {
   ]
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>): React.JSX.Element {
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
