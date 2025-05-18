@@ -1,6 +1,6 @@
 'use client'
 
-import { Folder, MoreHorizontal, Share, Trash2, type LucideIcon } from 'lucide-react'
+import { Folder, MoreHorizontal, Pencil, Trash2, type LucideIcon } from 'lucide-react'
 
 import {
   DropdownMenu,
@@ -19,10 +19,10 @@ import {
   useSidebar
 } from '@renderer/components/ui/sidebar'
 
-export function NavProjects({
-  projects
+export function NavFolders({
+  folders
 }: {
-  projects: {
+  folders: {
     name: string
     url: string
     icon: LucideIcon
@@ -32,9 +32,9 @@ export function NavProjects({
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarGroupLabel>Prompts</SidebarGroupLabel>
       <SidebarMenu>
-        {projects.map((item) => (
+        {folders.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
               <a href={item.url}>
@@ -56,27 +56,27 @@ export function NavProjects({
               >
                 <DropdownMenuItem>
                   <Folder className="text-muted-foreground" />
-                  <span>View Project</span>
+                  <span>View Folder</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Share className="text-muted-foreground" />
-                  <span>Share Project</span>
+                  <Pencil className="text-muted-foreground" />
+                  <span>Edit Folder</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Trash2 className="text-muted-foreground" />
-                  <span>Delete Project</span>
+                  <span>Delete Folder</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         ))}
-        <SidebarMenuItem>
+        {/* <SidebarMenuItem>
           <SidebarMenuButton>
             <MoreHorizontal />
             <span>More</span>
           </SidebarMenuButton>
-        </SidebarMenuItem>
+        </SidebarMenuItem> */}
       </SidebarMenu>
     </SidebarGroup>
   )

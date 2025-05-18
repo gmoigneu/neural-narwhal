@@ -2,20 +2,17 @@
 
 import * as React from 'react'
 import {
-  BookOpen,
-  Bot,
   Command,
-  Frame,
   LifeBuoy,
-  Map,
-  PieChart,
   Send,
   Settings2,
-  SquareTerminal
+  SquareTerminal,
+  Folder,
+  DollarSign
 } from 'lucide-react'
 
 import { NavMain } from '@renderer/components/nav-main'
-import { NavProjects } from '@renderer/components/nav-projects'
+import { NavFolders } from '@renderer/components/nav-folders'
 import { NavSecondary } from '@renderer/components/nav-secondary'
 import {
   Sidebar,
@@ -26,6 +23,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from '@renderer/components/ui/sidebar'
+import { NavSearch } from './nav-search'
 
 const data = {
   user: {
@@ -35,66 +33,16 @@ const data = {
   },
   navMain: [
     {
-      title: 'Playground',
+      title: 'Partials',
       url: '#',
       icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: 'History',
-          url: '#'
-        },
-        {
-          title: 'Starred',
-          url: '#'
-        },
-        {
-          title: 'Settings',
-          url: '#'
-        }
-      ]
+      isActive: true
     },
     {
-      title: 'Models',
+      title: 'Variables',
       url: '#',
-      icon: Bot,
-      items: [
-        {
-          title: 'Genesis',
-          url: '#'
-        },
-        {
-          title: 'Explorer',
-          url: '#'
-        },
-        {
-          title: 'Quantum',
-          url: '#'
-        }
-      ]
-    },
-    {
-      title: 'Documentation',
-      url: '#',
-      icon: BookOpen,
-      items: [
-        {
-          title: 'Introduction',
-          url: '#'
-        },
-        {
-          title: 'Get Started',
-          url: '#'
-        },
-        {
-          title: 'Tutorials',
-          url: '#'
-        },
-        {
-          title: 'Changelog',
-          url: '#'
-        }
-      ]
+      icon: DollarSign,
+      isActive: true
     },
     {
       title: 'Settings',
@@ -132,21 +80,21 @@ const data = {
       icon: Send
     }
   ],
-  projects: [
+  folders: [
     {
       name: 'Design Engineering',
       url: '#',
-      icon: Frame
+      icon: Folder
     },
     {
       name: 'Sales & Marketing',
       url: '#',
-      icon: PieChart
+      icon: Folder
     },
     {
       name: 'Travel',
       url: '#',
-      icon: Map
+      icon: Folder
     }
   ]
 }
@@ -163,8 +111,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>): 
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-semibold">Neural Narwhal</span>
+                  <span className="truncate text-xs">Prompt management</span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -172,8 +120,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>): 
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        <NavSearch />
+        <NavFolders folders={data.folders} />
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
