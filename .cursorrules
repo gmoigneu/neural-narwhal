@@ -1,0 +1,380 @@
+# Prompt Manager Development Specifications
+
+## Project Overview
+- **App Name**: Prompt Manager
+- **Platform**: Electron with Vite
+- **Primary Stack**: 
+  - Electron for cross-platform desktop application
+  - TanStack Router for client-side routing
+  - TailwindCSS v4 for styling
+  - Shadcn/ui for component library
+- **Key Features**: 
+  - Prompt versioning
+  - Prompt categories
+  - Advanced search functionality
+- **Storage**: Local folder storage (user-selected) using Prompty specification
+
+## Core Requirements
+
+### User Experience Goals
+1. **Simplicity First**
+   - Create an intuitive interface that requires minimal learning curve
+   - Focus on quick prompt creation, organization, and retrieval
+   - Ensure responsive UI with immediate feedback for all operations
+
+2. **Workflow Optimization**
+   - Support keyboard shortcuts for common actions
+   - Implement drag-and-drop for organizing prompts
+   - Provide quick access to recently used prompts
+   - Enable batch operations for multiple prompts
+
+3. **Customization**
+   - Allow users to customize the interface layout
+   - Support theming (dark/light mode and custom themes)
+   - Provide configurable display options for prompt lists and editors
+   - Enable user-defined templates for new prompts
+
+### MVP Functional Requirements
+
+1. **Prompt Management**
+   - Create, edit, delete, and duplicate prompts
+   - Support for the complete Prompty specification format
+   - Automatic validation of prompt structure
+   - Syntax highlighting for prompt content
+   - Real-time preview of prompt formatting
+
+2. **Partials System**
+   - Support for partial prompts that can be included in others
+   - Global partials available to all prompts
+   - Folder-specific partials that override globals
+   - Include syntax for embedding partials in prompts
+   - Visual indication of partials in editor
+   - Automatic updating of prompts when partials change
+
+3. **Variables Management**
+   - Global variables accessible to all prompts
+   - Folder-level variables that override globals
+   - Variable substitution in prompts with {{variable}} syntax
+   - Environment variable support with ${env:VAR_NAME} syntax
+   - Variable defaults and type validation
+   - UI for editing variables at global and folder level
+
+4. **Versioning System**
+   - Track changes to each prompt with automatic versioning
+   - Allow viewing and restoring previous versions
+   - Provide visual diff between versions
+   - Version history browser with timestamps and comments
+
+5. **Categorization**
+   - Hierarchical folder structure for organizing prompts
+   - Support for tags and custom attributes
+   - Category-based filtering
+   - Favorites/pinned prompts for quick access
+
+6. **Search Capabilities**
+   - Full-text search across all prompts and metadata
+   - Fuzzy search with typo tolerance
+   - Filtering by categories, tags, and attributes
+   - Search highlighting in results
+
+7. **Import/Export**
+   - Import of prompts from Prompty format
+   - Export as Prompty format, plain text, or JSON
+   - Batch operations for multiple prompts
+   - Local backup and restore functionality
+
+## Technical Architecture
+
+### Application Structure
+1. **Main Process (Electron)**
+   - File system management
+   - IPC communication coordination
+   - Configuration and settings storage
+   - Application lifecycle management
+   - Native OS integration
+
+2. **Renderer Process (React)**
+   - User interface components
+   - State management
+   - Routing and navigation
+   - Prompt editing and preview
+   - Search and filtering logic
+
+3. **Data Layer**
+   - Prompty specification parser and validator
+   - Local storage adapter
+   - Versioning system
+   - Search indexing
+   - Caching mechanism
+   - Partials resolution engine
+   - Variable substitution system
+
+### Module Organization
+1. **Core Modules**
+   - `PromptStorage` - Manages reading/writing prompts to disk
+   - `PromptIndex` - Handles search indexing and querying
+   - `VersionControl` - Manages prompt versions and history
+   - `CategoryManager` - Handles prompt organization
+   - `SettingsManager` - Manages user preferences and configuration
+   - `PartialsManager` - Handles partial prompts resolution and tracking
+   - `VariableManager` - Manages global and folder-level variables
+
+2. **UI Modules**
+   - `PromptEditor` - Rich editing interface for prompts
+   - `PromptBrowser` - List and grid views of prompt collections
+   - `SearchInterface` - Advanced search and filtering UI
+   - `HistoryViewer` - Interface for browsing version history
+   - `CategoryExplorer` - UI for navigating prompt categories
+   - `PartialsEditor` - Specialized editor for partial prompts
+   - `VariableEditor` - Interface for editing variables at different scopes
+
+## Prompty Specification Implementation
+
+### Core Schema Support
+```yaml
+# Example of the Prompty specification format to be supported
+---
+name: ExamplePrompt
+description: A prompt that uses context to ground an incoming question
+authors:
+  - Seth Juarez
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+    azure_endpoint: ${env:AZURE_OPENAI_ENDPOINT}
+    azure_deployment: <your-deployment>
+    api_version: 2024-07-01-preview
+  parameters:
+    max_tokens: 3000
+sample:
+  firstName: Seth
+  context: >
+    The Alpine Explorer Tent boasts a detachable divider for privacy, 
+    numerous mesh windows and adjustable vents for ventilation, and 
+    a waterproof design. It even has a built-in gear loft for storing 
+    your outdoor essentials. In short, it's a blend of privacy, comfort, 
+    and convenience, making it your second home in the heart of nature!
+  question: What can you tell me about your tents?
+---
+
+system:
+You are an AI assistant who helps people find information. As the assistant, 
+you answer questions briefly, succinctly, and in a personable manner using 
+markdown and even add some personal flair with appropriate emojis.
+
+# Customer
+You are helping {{firstName}} to find answers to their questions.
+Use their name to address them in your responses.
+
+# Context
+Use the following context to provide a more personalized response to {{firstName}}:
+{{context}}
+
+user:
+{{question}}
+```
+
+## Extended Prompty Features
+1. **Partials Implementation**
+   - Partials stored in dedicated folders (global and per-folder)
+   - Partials can be included in any prompt using a defined syntax (e.g., `{{>partial_name}}`)
+   - Automatic resolution of partial dependencies
+   - Circular dependency detection and prevention
+   - Change tracking to update prompts when included partials change
+   - UI for creating, editing, and managing partials
+   - Preview of expanded prompts with partials resolved
+
+2. **Variable System**
+   - Variables defined at global level in a configuration file
+   - Folder-level variables that can override global variables
+   - Environment variable integration with `${env:VAR_NAME}` syntax
+   - Variable typing (string, number, boolean, array, object)
+   - Default values for optional variables
+   - Template suggestions based on available variables
+   - Variable scope visualization in the editor
+
+3. **Metadata Extensions**
+   - Additional fields for categorization
+   - Custom user-defined fields
+   - Usage statistics tracking
+   - Performance ratings and feedback
+
+## Performance Considerations
+
+1. **Optimization Targets**
+   - Sub-100ms response time for UI interactions
+   - Instant search results for up to 10,000 prompts
+   - Smooth scrolling through large collections
+   - Efficient memory usage for large prompt libraries
+
+2. **Scalability Approaches**
+   - Virtual scrolling for long lists
+   - Incremental loading of prompt content
+   - Background indexing of prompt content
+   - Caching frequently accessed prompts
+   - Lazy loading of prompt history and versions
+
+## Security and Privacy
+
+1. **Data Protection**
+   - Local encryption of sensitive prompts
+   - Secure handling of API keys in prompts
+   - Sandboxed execution environment
+   - Privacy-focused design (no telemetry by default)
+
+2. **Access Control**
+   - Optional password protection for the application
+   - Granular permissions for prompt collections
+   - Audit logging for sensitive operations
+   - Secure export with encryption options
+
+## Accessibility Requirements
+
+1. **Universal Design**
+   - Full keyboard navigation
+   - Screen reader compatibility
+   - High contrast mode
+   - Adjustable text size and spacing
+   - WCAG 2.1 AA compliance
+
+## Development Best Practices
+
+### Code Quality Standards
+1. **TypeScript Usage**
+   - Use TypeScript for all code with strict mode enabled
+   - Create comprehensive type definitions for all data structures
+   - Document complex types with JSDoc comments
+   - Avoid using `any` type except where absolutely necessary
+   - Use discriminated unions for complex state management
+
+2. **Component Architecture**
+   - Follow atomic design principles (atoms, molecules, organisms, templates, pages)
+   - Create pure functional components where possible
+   - Use React hooks for state and side effects
+   - Implement custom hooks for reusable functionality
+   - Keep components focused on a single responsibility
+   - Document props with TypeScript interfaces
+
+3. **State Management**
+   - Use React Context for global application state
+   - Create separate contexts for logically distinct state domains
+   - Implement reducers for complex state transitions
+   - Use the useReducer pattern for local component state when appropriate
+   - Keep state normalized to avoid duplication
+   - Document state shape and transitions
+
+### Performance Optimization
+1. **Rendering Performance**
+   - Use React.memo for expensive components
+   - Implement useMemo and useCallback to prevent unnecessary re-renders
+   - Use virtualization for long lists (react-window or similar)
+   - Lazy load components not needed for initial render
+   - Profile and optimize re-renders
+
+2. **File Operations**
+   - Perform all file I/O in the main process
+   - Implement caching for frequently accessed files
+   - Use streaming for large files
+   - Batch file operations where possible
+   - Implement throttling for file watchers
+
+3. **Search Performance**
+   - Build an optimized search index (in-memory or SQLite)
+   - Implement incremental index updates
+   - Use worker threads for search operations
+   - Implement debounced search for typed queries
+   - Optimize regex patterns for search
+
+### Error Handling and Resilience
+1. **Robust Error Management**
+   - Implement error boundaries at key component boundaries
+   - Use try/catch for all async operations
+   - Provide meaningful error messages to users
+   - Log errors with contextual information
+   - Recover gracefully from file system errors
+
+2. **Data Integrity**
+   - Validate all data before writing to disk
+   - Implement atomic write operations when possible
+   - Create automatic backups before risky operations
+   - Verify file integrity after write operations
+   - Prevent data loss with optimistic locking
+
+### Electron-Specific Best Practices
+1. **IPC Communication**
+   - Define clear message types for IPC
+   - Document all IPC messages and payloads
+   - Implement proper error handling for IPC failures
+   - Minimize data transfer over IPC
+   - Use typed interfaces for IPC messages
+
+2. **Security Considerations**
+   - Follow Electron security best practices
+   - Disable Node integration in renderer processes
+   - Use contextIsolation and sandbox options
+   - Validate all user inputs
+   - Implement proper content security policies
+
+### Testing Strategy
+1. **Test Coverage Requirements**
+   - Unit tests for all utility functions
+   - Component tests for UI elements
+   - Integration tests for file system operations
+   - End-to-end tests for critical user flows
+   - Aim for 80%+ code coverage
+
+2. **Test Organization**
+   - Organize tests to mirror code structure
+   - Use descriptive test names
+   - Implement testing utilities for common operations
+   - Create fixtures for test data
+   - Document test requirements and assumptions
+
+### Code Organization and Documentation
+1. **Folder Structure**
+   - Organize code by feature rather than type
+   - Keep related files together
+   - Use consistent naming conventions
+   - Create README files for complex modules
+   - Document architecture decisions
+
+2. **Documentation Requirements**
+   - Include JSDoc comments for all exports
+   - Document component props and state
+   - Create usage examples for complex components
+   - Document state management patterns
+   - Maintain architecture documentation
+
+## Future Expansion Areas (Post-MVP)
+
+1. **AI Integration**
+   - Direct testing of prompts with various AI providers
+   - Prompt effectiveness analysis
+   - Automatic prompt improvement suggestions
+   - Prompt combination and remixing features
+
+2. **Collaboration Features**
+   - Comments and annotations on prompts
+   - Activity history tracking who modified what and when
+   - Optional cloud sync for team collaboration
+   - Access control and permission management
+   - Sharing prompts between team members
+
+3. **Advanced Analytics**
+   - Usage tracking of prompts
+   - Performance metrics for different prompt versions
+   - Cost analysis for API usage
+   - Insight generation on prompt effectiveness
+
+4. **Integration Capabilities**
+   - API for external tools
+   - Plugin system for extensibility
+   - Integration with popular AI platforms
+   - Webhook support for automation
+
+5. **Advanced Versioning**
+   - Support branching for experimental prompt variations
+   - Enable merging of prompt branches
+   - Git-like version control features
+   - Conflict resolution for collaborative editing
