@@ -1,6 +1,9 @@
-# electron-prompts
+# 🐬 Neural Narwhal
 
-An Electron application with React and TypeScript
+> **Work In Progress 🚧**
+> This project is under active development. Features and UI may change rapidly!
+
+**The ultimate local-first prompt manager for power users, privacy advocates, and prompt engineers. Organize, version, and supercharge your AI prompts—all on your own machine.**
 
 ![Screenshot](./screenshot.png)
 
