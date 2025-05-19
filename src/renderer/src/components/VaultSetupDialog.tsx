@@ -27,11 +27,11 @@ export function VaultSetupDialog(): React.JSX.Element {
         setSelectedPath(currentPath)
         setIsOpen(true)
       })
-      .catch(err => {
-        console.error('[VaultSetupDialog] Error in getVaultPath inside handleShowDialog:', err);
+      .catch((err) => {
+        console.error('[VaultSetupDialog] Error in getVaultPath inside handleShowDialog:', err)
         // Optionally, still try to open the dialog but show an error,
         // or decide not to open if this initial check fails badly.
-        setIsOpen(true); // Attempt to open even if getVaultPath fails to show setup
+        setIsOpen(true) // Attempt to open even if getVaultPath fails to show setup
       })
   }, [])
 
@@ -43,13 +43,13 @@ export function VaultSetupDialog(): React.JSX.Element {
       setIsOpen(false)
     })
     const cleanupVaultSetSuccess = window.api.onVaultSetSuccess(() => {
-        setIsOpen(false);
-        alert('Vault directory saved successfully!'); // Consider a less obtrusive notification
-    });
+      setIsOpen(false)
+      alert('Vault directory saved successfully!') // Consider a less obtrusive notification
+    })
 
     // Initial check to see if vault is already set. If not, main will command dialog to open.
     // If it is set, main will send 'vault-ready', handled above.
-    window.api.getVaultPath().catch(console.error); // Just log error for initial check
+    window.api.getVaultPath().catch(console.error) // Just log error for initial check
 
     return () => {
       cleanupShowDialog()
@@ -125,7 +125,12 @@ export function VaultSetupDialog(): React.JSX.Element {
             <Label htmlFor="vault-path" className="text-right">
               Vault Path
             </Label>
-            <Input id="vault-path" value={selectedPath || 'Not selected'} readOnly className="col-span-3" />
+            <Input
+              id="vault-path"
+              value={selectedPath || 'Not selected'}
+              readOnly
+              className="col-span-3"
+            />
           </div>
           <Button onClick={handleChooseFolder} disabled={isLoading} variant="outline">
             {isLoading ? 'Loading...' : 'Choose Folder...'}

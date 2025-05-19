@@ -7,6 +7,7 @@ import './global.css'
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
 import { VaultSetupDialog } from './components/VaultSetupDialog'
+// import { Toaster } from '@renderer/components/ui/toaster' // User will add this later
 
 // Create a new router instance
 const router = createRouter({ routeTree })
@@ -26,6 +27,8 @@ if (!rootElement.innerHTML) {
     <React.StrictMode>
       <RouterProvider router={router} />
       <VaultSetupDialog />
+      {/* <Toaster /> */}
+      {/* User will add this later */}
     </React.StrictMode>
   )
 }

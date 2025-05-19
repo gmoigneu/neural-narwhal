@@ -1,18 +1,51 @@
 import { app, shell, BrowserWindow, dialog, ipcMain } from 'electron'
-import { join } from 'path'
+import { join, extname } from 'node:path'
+import fs from 'fs/promises'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import Store from 'electron-store'
+import slugify from '@sindresorhus/slugify'
+import yaml from 'js-yaml'
+
+export interface Window {
+  api: {
+    getIndexedFolders: () => Promise<IndexedFolder[]>
+    onVaultIndexed: (callback: (indexedFolders: IndexedFolder[]) => void) => void
+    onVaultReady: (callback: (vaultPath: string) => void) => void
+    onVaultSetSuccess: (callback: () => void) => void
+    onShowVaultSetupDialog: (callback: () => void) => void
+    getVaultPath: () => Promise<string>
+    selectNativeFolder: () => Promise<string>
+    saveVaultDirectory: (vaultPath: string) => Promise<void>
+  }
+}
 
 // Define a schema for the store
+interface PromptFile {
+  name: string // e.g., "example-prompt.md"
+  path: string // Full path to the file
+  frontmatter?: Record<string, unknown> // Parsed YAML frontmatter
+  contentBody?: string // The content of the prompt after the frontmatter
+  lastIndexed: number // Timestamp of the last indexing
+}
+
+interface IndexedFolder {
+  name: string // e.g., "Test folder"
+  path: string // Full path to the folder
+  slug: string // Slugified path
+  prompts: PromptFile[]
+}
+
 interface AppStore {
   vaultDirectory?: string
+  indexedFolders?: IndexedFolder[]
 }
 
 // Initialize electron-store with the schema
 const store = new Store<AppStore>({
   defaults: {
-    vaultDirectory: undefined
+    vaultDirectory: undefined,
+    indexedFolders: [] // Default to an empty array
   }
 })
 
@@ -47,27 +80,37 @@ ipcMain.handle('save-vault-directory', async (event, vaultPath: string | undefin
       dialog.showMessageBoxSync(mainWindow, {
         type: 'error',
         title: 'Vault Directory Not Saved',
-        message: 'No vault directory was selected. The application will now close.'
+        message:
+          'No vault directory was selected. The application may not function correctly or will close.'
       })
+      // Optionally, prevent further app operation or guide user to select again
+      // For now, we allow the app to continue but log an error.
+      console.error('Vault Directory Not Saved: No directory provided.')
+      // Consider sending a specific IPC message to renderer to re-trigger setup
+      mainWindow?.webContents.send('show-vault-setup-dialog')
+      return { success: false, error: 'No path provided, setup dialog triggered.' }
     } else {
       console.error(
         'Vault Directory Not Saved: No directory provided and no main window available for dialog.'
       )
+      // If no mainWindow, this is a critical setup failure, likely on initial launch without UI.
+      // Depending on app design, might quit or retry. For now, quit.
+      app.quit()
+      return { success: false, error: 'No path provided and no window context.' }
     }
-    app.quit()
-    return { success: false, error: 'No path provided.' }
   }
 
   try {
     store.set('vaultDirectory', vaultPath)
     console.log(`Vault directory set to: ${vaultPath}`)
+    await indexVaultDirectory(vaultPath, mainWindow) // Index after setting
     if (mainWindow) {
       mainWindow.webContents.send('vault-set-success') // Inform renderer
     }
     return { success: true, path: vaultPath }
   } catch (error: unknown) {
-    console.error('Failed to save vault directory:', error)
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    console.error('Failed to save/index vault directory:', error)
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.'
     if (mainWindow) {
       dialog.showMessageBoxSync(mainWindow, {
         type: 'error',
@@ -79,6 +122,104 @@ ipcMain.handle('save-vault-directory', async (event, vaultPath: string | undefin
     return { success: false, error: errorMessage }
   }
 })
+
+// Function to parse a single prompt file
+async function parsePromptFileContent(
+  filePath: string
+): Promise<Omit<PromptFile, 'name' | 'path' | 'lastIndexed'> & { error?: string }> {
+  try {
+    const fileContent = await fs.readFile(filePath, 'utf-8')
+    const parts = fileContent.split('---')
+    let frontmatter: Record<string, unknown> | undefined
+    let contentBody: string | undefined
+
+    if (parts.length >= 3 && parts[0].trim() === '') {
+      // Potential frontmatter
+      try {
+        frontmatter = yaml.load(parts[1]) as Record<string, unknown>
+        contentBody = parts.slice(2).join('---').trim()
+      } catch (e) {
+        console.warn(`[Main Process] YAML parsing error in ${filePath}:`, e)
+        // Fallback: treat entire content as body if YAML is malformed
+        contentBody = fileContent.trim()
+        return { contentBody, error: `YAML parsing error: ${(e as Error).message}` }
+      }
+    } else {
+      // No valid frontmatter found or not in Prompty format
+      contentBody = fileContent.trim()
+    }
+
+    return { frontmatter, contentBody }
+  } catch (error) {
+    console.error(`[Main Process] Error reading or processing file ${filePath}:`, error)
+    return { error: `Failed to read file: ${(error as Error).message}` }
+  }
+}
+
+async function indexVaultDirectory(
+  vaultPath: string,
+  mainWindow: BrowserWindow | null
+): Promise<void> {
+  console.log(`[Main Process] Indexing vault directory: ${vaultPath}`)
+  try {
+    const indexedFolders: IndexedFolder[] = []
+    const entries = await fs.readdir(vaultPath, { withFileTypes: true })
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const folderPath = join(vaultPath, entry.name)
+        const promptFiles: PromptFile[] = []
+        try {
+          const subEntries = await fs.readdir(folderPath, { withFileTypes: true })
+          for (const subEntry of subEntries) {
+            if (subEntry.isFile() && extname(subEntry.name).toLowerCase() === '.md') {
+              const filePath = join(folderPath, subEntry.name)
+              const parsedContent = await parsePromptFileContent(filePath)
+              if (parsedContent.error) {
+                console.warn(`[Main Process] Skipping file ${filePath} due to error: ${parsedContent.error}`)
+                // Optionally, still add the file but with an error status
+                promptFiles.push({
+                  name: subEntry.name,
+                  path: filePath,
+                  lastIndexed: Date.now(),
+                  contentBody: `Error: ${parsedContent.error}` // Store error in contentBody
+                })
+              } else {
+                promptFiles.push({
+                  name: subEntry.name,
+                  path: filePath,
+                  frontmatter: parsedContent.frontmatter,
+                  contentBody: parsedContent.contentBody,
+                  lastIndexed: Date.now()
+                })
+              }
+            }
+          }
+          indexedFolders.push({
+            name: entry.name,
+            path: folderPath,
+            slug: slugify(entry.name, { lowercase: true }),
+            prompts: promptFiles
+          })
+        } catch (err) {
+          console.error(`[Main Process] Error reading subdirectory ${folderPath}:`, err)
+          // Skip this folder or handle error as needed
+        }
+      }
+    }
+    store.set('indexedFolders', indexedFolders)
+    console.log('[Main Process] Vault indexing complete. Folders found:', indexedFolders.length)
+    if (mainWindow) {
+      mainWindow.webContents.send('vault-indexed', indexedFolders) // Send indexed data
+    }
+  } catch (error) {
+    console.error(`[Main Process] Error indexing vault directory ${vaultPath}:`, error)
+    store.set('indexedFolders', []) // Clear or set to empty on error
+    if (mainWindow) {
+      mainWindow.webContents.send('vault-indexed', []) // Or send an error signal
+    }
+  }
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -107,8 +248,8 @@ function createWindow(): void {
 
   // Listen for did-finish-load before checking vault and potentially sending IPC
   mainWindow.webContents.on('did-finish-load', () => {
-    checkAndSetVaultDirectory(mainWindow); // Now check vault status
-  });
+    checkAndSetVaultDirectory(mainWindow) // Now check vault status
+  })
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or local HTML for production.
@@ -126,14 +267,15 @@ async function checkAndSetVaultDirectory(mainWindow: BrowserWindow): Promise<voi
   if (!vaultPath) {
     mainWindow.webContents.send('show-vault-setup-dialog')
   } else {
-    console.log(`[Main Process] Vault directory found: ${vaultPath}`);
+    console.log(`[Main Process] Vault directory found: ${vaultPath}`)
+    await indexVaultDirectory(vaultPath, mainWindow) // Index if vault already set
     mainWindow.webContents.send('vault-ready', vaultPath)
   }
 }
 
 app.whenReady().then(() => {
   // Log the userData path to help locate the electron-store JSON file
-  console.log(`[Main Process] electron-store userData path: ${app.getPath('userData')}`);
+  console.log(`[Main Process] electron-store userData path: ${app.getPath('userData')}`)
 
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
@@ -163,6 +305,21 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+// IPC handler for renderer to get indexed folders
+ipcMain.handle('get-indexed-folders', async () => {
+  return store.get('indexedFolders')
+})
+
+// IPC handler for renderer to get prompts for a specific folder slug
+ipcMain.handle('get-prompts-for-folder', async (_, folderSlug: string) => {
+  const indexedFolders = store.get('indexedFolders')
+  if (indexedFolders) {
+    const folder = indexedFolders.find(f => f.slug === folderSlug)
+    return folder?.prompts
+  }
+  return undefined
 })
 
 // In this file you can include the rest of your app's specific main process

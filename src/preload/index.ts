@@ -1,5 +1,22 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+
+// Minimal type definitions for preload's awareness, mirroring those in main/index.ts for the API contract.
+// These ensure preload knows the shape of data it's passing for getIndexedFolders and onVaultIndexed.
+interface PromptFilePreload {
+  name: string
+  path: string
+  frontmatter?: Record<string, unknown>
+  contentBody?: string
+  lastIndexed: number
+}
+
+interface IndexedFolderPreload {
+  name: string
+  path: string
+  slug: string
+  prompts: PromptFilePreload[]
+}
 
 // Custom APIs for renderer
 const api = {
@@ -8,16 +25,15 @@ const api = {
   // Method to trigger native folder selection dialog
   selectNativeFolder: (): Promise<string | undefined> => ipcRenderer.invoke('select-native-folder'),
   // Method to save the selected vault directory
-  saveVaultDirectory: (path: string): Promise<{success: boolean, path?: string, error?: string}> => ipcRenderer.invoke('save-vault-directory', path),
+  saveVaultDirectory: (
+    path: string
+  ): Promise<{ success: boolean; path?: string; error?: string }> =>
+    ipcRenderer.invoke('save-vault-directory', path),
   // Listener for main process instructing to show the dialog
   onShowVaultSetupDialog: (callback: () => void): (() => void) => {
-    const handler = (): void => {
-      callback()
-    }
+    const handler = (): void => callback()
     ipcRenderer.on('show-vault-setup-dialog', handler)
-    return () => {
-      ipcRenderer.removeListener('show-vault-setup-dialog', handler)
-    }
+    return () => ipcRenderer.removeListener('show-vault-setup-dialog', handler)
   },
   // Listener for main process indicating vault is already set and ready
   onVaultReady: (callback: (path: string) => void): (() => void) => {
@@ -27,10 +43,27 @@ const api = {
   },
   // Listener for successful vault set confirmation
   onVaultSetSuccess: (callback: () => void): (() => void) => {
-    const handler = (): void => callback()
-    ipcRenderer.on('vault-set-success', handler)
-    return () => ipcRenderer.removeListener('vault-set-success', handler)
-  }
+    const channel = 'vault-set-success'
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const listener = (_event: IpcRendererEvent): void => callback()
+    ipcRenderer.on(channel, listener)
+    return () => {
+      ipcRenderer.removeListener(channel, listener)
+    }
+  },
+  getIndexedFolders: (): Promise<IndexedFolderPreload[]> =>
+    ipcRenderer.invoke('get-indexed-folders'),
+  onVaultIndexed: (callback: (indexedFolders: IndexedFolderPreload[]) => void) => {
+    const channel = 'vault-indexed'
+    const listener = (_event: IpcRendererEvent, indexedFolders: IndexedFolderPreload[]): void =>
+      callback(indexedFolders)
+    ipcRenderer.on(channel, listener)
+    return () => {
+      ipcRenderer.removeListener(channel, listener)
+    }
+  },
+  getPromptsForFolder: (folderSlug: string): Promise<PromptFilePreload[] | undefined> =>
+    ipcRenderer.invoke('get-prompts-for-folder', folderSlug)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

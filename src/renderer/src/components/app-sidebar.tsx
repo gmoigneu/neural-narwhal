@@ -24,6 +24,7 @@ import {
   SidebarMenuItem
 } from '@renderer/components/ui/sidebar'
 import { NavSearch } from './nav-search'
+import { Link } from '@tanstack/react-router'
 
 const data = {
   user: {
@@ -110,10 +111,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>): 
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <Link to="/" className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Neural Narwhal</span>
                   <span className="truncate text-xs">Prompt management</span>
-                </div>
+                </Link>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
