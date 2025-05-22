@@ -24,6 +24,7 @@ export interface Window {
 interface PromptFile {
   name: string // e.g., "example-prompt.md"
   path: string // Full path to the file
+  slug: string // Slugified filename (without .md)
   frontmatter?: Record<string, unknown> // Parsed YAML frontmatter
   contentBody?: string // The content of the prompt after the frontmatter
   lastIndexed: number // Timestamp of the last indexing
@@ -125,8 +126,10 @@ ipcMain.handle('save-vault-directory', async (event, vaultPath: string | undefin
 
 // Function to parse a single prompt file
 async function parsePromptFileContent(
-  filePath: string
+  filePath: string,
+  fileName: string // pass the filename for slug generation
 ): Promise<Omit<PromptFile, 'name' | 'path' | 'lastIndexed'> & { error?: string }> {
+  const slug = slugify(fileName.replace(/\.md$/i, ''), { lowercase: true })
   try {
     const fileContent = await fs.readFile(filePath, 'utf-8')
     const parts = fileContent.split('---')
@@ -142,17 +145,17 @@ async function parsePromptFileContent(
         console.warn(`[Main Process] YAML parsing error in ${filePath}:`, e)
         // Fallback: treat entire content as body if YAML is malformed
         contentBody = fileContent.trim()
-        return { contentBody, error: `YAML parsing error: ${(e as Error).message}` }
+        return { contentBody, slug, error: `YAML parsing error: ${(e as Error).message}` }
       }
     } else {
       // No valid frontmatter found or not in Prompty format
       contentBody = fileContent.trim()
     }
 
-    return { frontmatter, contentBody }
+    return { frontmatter, contentBody, slug }
   } catch (error) {
     console.error(`[Main Process] Error reading or processing file ${filePath}:`, error)
-    return { error: `Failed to read file: ${(error as Error).message}` }
+    return { error: `Failed to read file: ${(error as Error).message}`, slug }
   }
 }
 
@@ -174,13 +177,16 @@ async function indexVaultDirectory(
           for (const subEntry of subEntries) {
             if (subEntry.isFile() && extname(subEntry.name).toLowerCase() === '.md') {
               const filePath = join(folderPath, subEntry.name)
-              const parsedContent = await parsePromptFileContent(filePath)
+              const parsedContent = await parsePromptFileContent(filePath, subEntry.name)
               if (parsedContent.error) {
-                console.warn(`[Main Process] Skipping file ${filePath} due to error: ${parsedContent.error}`)
+                console.warn(
+                  `[Main Process] Skipping file ${filePath} due to error: ${parsedContent.error}`
+                )
                 // Optionally, still add the file but with an error status
                 promptFiles.push({
                   name: subEntry.name,
                   path: filePath,
+                  slug: parsedContent.slug,
                   lastIndexed: Date.now(),
                   contentBody: `Error: ${parsedContent.error}` // Store error in contentBody
                 })
@@ -188,6 +194,7 @@ async function indexVaultDirectory(
                 promptFiles.push({
                   name: subEntry.name,
                   path: filePath,
+                  slug: parsedContent.slug,
                   frontmatter: parsedContent.frontmatter,
                   contentBody: parsedContent.contentBody,
                   lastIndexed: Date.now()
@@ -316,7 +323,7 @@ ipcMain.handle('get-indexed-folders', async () => {
 ipcMain.handle('get-prompts-for-folder', async (_, folderSlug: string) => {
   const indexedFolders = store.get('indexedFolders')
   if (indexedFolders) {
-    const folder = indexedFolders.find(f => f.slug === folderSlug)
+    const folder = indexedFolders.find((f) => f.slug === folderSlug)
     return folder?.prompts
   }
   return undefined

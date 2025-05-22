@@ -1,15 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import {
-  Command,
-  LifeBuoy,
-  Send,
-  Settings2,
-  SquareTerminal,
-  Folder,
-  DollarSign
-} from 'lucide-react'
+import { Command, LifeBuoy, Send, Settings2, SquareTerminal, DollarSign } from 'lucide-react'
 
 import { NavMain } from '@renderer/components/nav-main'
 import { NavFolders } from '@renderer/components/nav-folders'
@@ -27,11 +19,6 @@ import { NavSearch } from './nav-search'
 import { Link } from '@tanstack/react-router'
 
 const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg'
-  },
   navMain: [
     {
       title: 'Partials',
@@ -48,25 +35,7 @@ const data = {
     {
       title: 'Settings',
       url: '#',
-      icon: Settings2,
-      items: [
-        {
-          title: 'General',
-          url: '#'
-        },
-        {
-          title: 'Team',
-          url: '#'
-        },
-        {
-          title: 'Billing',
-          url: '#'
-        },
-        {
-          title: 'Limits',
-          url: '#'
-        }
-      ]
+      icon: Settings2
     }
   ],
   navSecondary: [
@@ -79,23 +48,6 @@ const data = {
       title: 'Feedback',
       url: '#',
       icon: Send
-    }
-  ],
-  folders: [
-    {
-      name: 'Design Engineering',
-      url: '#',
-      icon: Folder
-    },
-    {
-      name: 'Sales & Marketing',
-      url: '#',
-      icon: Folder
-    },
-    {
-      name: 'Travel',
-      url: '#',
-      icon: Folder
     }
   ]
 }
@@ -122,7 +74,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>): 
       </SidebarHeader>
       <SidebarContent>
         <NavSearch />
-        <NavFolders folders={data.folders} />
+        <NavFolders />
         <NavMain items={data.navMain} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>

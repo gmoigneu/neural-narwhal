@@ -13,8 +13,10 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
-import { Route as FoldersFolderSlugImport } from './routes/folders/$folderSlug'
+import { Route as FoldersFolderSlugIndexImport } from './routes/folders/$folderSlug/index'
 import { Route as FoldersFolderSlugEditImport } from './routes/folders/$folderSlug.edit'
+import { Route as FoldersFolderSlugPromptSlugImport } from './routes/folders/$folderSlug/$promptSlug'
+import { Route as FoldersFolderSlugPromptSlugEditImport } from './routes/folders/$folderSlug/$promptSlug/edit'
 
 // Create/Update Routes
 
@@ -30,17 +32,31 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const FoldersFolderSlugRoute = FoldersFolderSlugImport.update({
-  id: '/folders/$folderSlug',
-  path: '/folders/$folderSlug',
+const FoldersFolderSlugIndexRoute = FoldersFolderSlugIndexImport.update({
+  id: '/folders/$folderSlug/',
+  path: '/folders/$folderSlug/',
   getParentRoute: () => rootRoute,
 } as any)
 
 const FoldersFolderSlugEditRoute = FoldersFolderSlugEditImport.update({
-  id: '/edit',
-  path: '/edit',
-  getParentRoute: () => FoldersFolderSlugRoute,
+  id: '/folders/$folderSlug/edit',
+  path: '/folders/$folderSlug/edit',
+  getParentRoute: () => rootRoute,
 } as any)
+
+const FoldersFolderSlugPromptSlugRoute =
+  FoldersFolderSlugPromptSlugImport.update({
+    id: '/folders/$folderSlug/$promptSlug',
+    path: '/folders/$folderSlug/$promptSlug',
+    getParentRoute: () => rootRoute,
+  } as any)
+
+const FoldersFolderSlugPromptSlugEditRoute =
+  FoldersFolderSlugPromptSlugEditImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => FoldersFolderSlugPromptSlugRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -60,56 +76,79 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutImport
       parentRoute: typeof rootRoute
     }
-    '/folders/$folderSlug': {
-      id: '/folders/$folderSlug'
-      path: '/folders/$folderSlug'
-      fullPath: '/folders/$folderSlug'
-      preLoaderRoute: typeof FoldersFolderSlugImport
+    '/folders/$folderSlug/$promptSlug': {
+      id: '/folders/$folderSlug/$promptSlug'
+      path: '/folders/$folderSlug/$promptSlug'
+      fullPath: '/folders/$folderSlug/$promptSlug'
+      preLoaderRoute: typeof FoldersFolderSlugPromptSlugImport
       parentRoute: typeof rootRoute
     }
     '/folders/$folderSlug/edit': {
       id: '/folders/$folderSlug/edit'
-      path: '/edit'
+      path: '/folders/$folderSlug/edit'
       fullPath: '/folders/$folderSlug/edit'
       preLoaderRoute: typeof FoldersFolderSlugEditImport
-      parentRoute: typeof FoldersFolderSlugImport
+      parentRoute: typeof rootRoute
+    }
+    '/folders/$folderSlug/': {
+      id: '/folders/$folderSlug/'
+      path: '/folders/$folderSlug'
+      fullPath: '/folders/$folderSlug'
+      preLoaderRoute: typeof FoldersFolderSlugIndexImport
+      parentRoute: typeof rootRoute
+    }
+    '/folders/$folderSlug/$promptSlug/edit': {
+      id: '/folders/$folderSlug/$promptSlug/edit'
+      path: '/edit'
+      fullPath: '/folders/$folderSlug/$promptSlug/edit'
+      preLoaderRoute: typeof FoldersFolderSlugPromptSlugEditImport
+      parentRoute: typeof FoldersFolderSlugPromptSlugImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface FoldersFolderSlugRouteChildren {
-  FoldersFolderSlugEditRoute: typeof FoldersFolderSlugEditRoute
+interface FoldersFolderSlugPromptSlugRouteChildren {
+  FoldersFolderSlugPromptSlugEditRoute: typeof FoldersFolderSlugPromptSlugEditRoute
 }
 
-const FoldersFolderSlugRouteChildren: FoldersFolderSlugRouteChildren = {
-  FoldersFolderSlugEditRoute: FoldersFolderSlugEditRoute,
-}
+const FoldersFolderSlugPromptSlugRouteChildren: FoldersFolderSlugPromptSlugRouteChildren =
+  {
+    FoldersFolderSlugPromptSlugEditRoute: FoldersFolderSlugPromptSlugEditRoute,
+  }
 
-const FoldersFolderSlugRouteWithChildren =
-  FoldersFolderSlugRoute._addFileChildren(FoldersFolderSlugRouteChildren)
+const FoldersFolderSlugPromptSlugRouteWithChildren =
+  FoldersFolderSlugPromptSlugRoute._addFileChildren(
+    FoldersFolderSlugPromptSlugRouteChildren,
+  )
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/folders/$folderSlug': typeof FoldersFolderSlugRouteWithChildren
+  '/folders/$folderSlug/$promptSlug': typeof FoldersFolderSlugPromptSlugRouteWithChildren
   '/folders/$folderSlug/edit': typeof FoldersFolderSlugEditRoute
+  '/folders/$folderSlug': typeof FoldersFolderSlugIndexRoute
+  '/folders/$folderSlug/$promptSlug/edit': typeof FoldersFolderSlugPromptSlugEditRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/folders/$folderSlug': typeof FoldersFolderSlugRouteWithChildren
+  '/folders/$folderSlug/$promptSlug': typeof FoldersFolderSlugPromptSlugRouteWithChildren
   '/folders/$folderSlug/edit': typeof FoldersFolderSlugEditRoute
+  '/folders/$folderSlug': typeof FoldersFolderSlugIndexRoute
+  '/folders/$folderSlug/$promptSlug/edit': typeof FoldersFolderSlugPromptSlugEditRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/folders/$folderSlug': typeof FoldersFolderSlugRouteWithChildren
+  '/folders/$folderSlug/$promptSlug': typeof FoldersFolderSlugPromptSlugRouteWithChildren
   '/folders/$folderSlug/edit': typeof FoldersFolderSlugEditRoute
+  '/folders/$folderSlug/': typeof FoldersFolderSlugIndexRoute
+  '/folders/$folderSlug/$promptSlug/edit': typeof FoldersFolderSlugPromptSlugEditRoute
 }
 
 export interface FileRouteTypes {
@@ -117,29 +156,44 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
-    | '/folders/$folderSlug'
+    | '/folders/$folderSlug/$promptSlug'
     | '/folders/$folderSlug/edit'
+    | '/folders/$folderSlug'
+    | '/folders/$folderSlug/$promptSlug/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/folders/$folderSlug' | '/folders/$folderSlug/edit'
+  to:
+    | '/'
+    | '/about'
+    | '/folders/$folderSlug/$promptSlug'
+    | '/folders/$folderSlug/edit'
+    | '/folders/$folderSlug'
+    | '/folders/$folderSlug/$promptSlug/edit'
   id:
     | '__root__'
     | '/'
     | '/about'
-    | '/folders/$folderSlug'
+    | '/folders/$folderSlug/$promptSlug'
     | '/folders/$folderSlug/edit'
+    | '/folders/$folderSlug/'
+    | '/folders/$folderSlug/$promptSlug/edit'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  FoldersFolderSlugRoute: typeof FoldersFolderSlugRouteWithChildren
+  FoldersFolderSlugPromptSlugRoute: typeof FoldersFolderSlugPromptSlugRouteWithChildren
+  FoldersFolderSlugEditRoute: typeof FoldersFolderSlugEditRoute
+  FoldersFolderSlugIndexRoute: typeof FoldersFolderSlugIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  FoldersFolderSlugRoute: FoldersFolderSlugRouteWithChildren,
+  FoldersFolderSlugPromptSlugRoute:
+    FoldersFolderSlugPromptSlugRouteWithChildren,
+  FoldersFolderSlugEditRoute: FoldersFolderSlugEditRoute,
+  FoldersFolderSlugIndexRoute: FoldersFolderSlugIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -154,7 +208,9 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/about",
-        "/folders/$folderSlug"
+        "/folders/$folderSlug/$promptSlug",
+        "/folders/$folderSlug/edit",
+        "/folders/$folderSlug/"
       ]
     },
     "/": {
@@ -163,15 +219,21 @@ export const routeTree = rootRoute
     "/about": {
       "filePath": "about.tsx"
     },
-    "/folders/$folderSlug": {
-      "filePath": "folders/$folderSlug.tsx",
+    "/folders/$folderSlug/$promptSlug": {
+      "filePath": "folders/$folderSlug/$promptSlug.tsx",
       "children": [
-        "/folders/$folderSlug/edit"
+        "/folders/$folderSlug/$promptSlug/edit"
       ]
     },
     "/folders/$folderSlug/edit": {
-      "filePath": "folders/$folderSlug.edit.tsx",
-      "parent": "/folders/$folderSlug"
+      "filePath": "folders/$folderSlug.edit.tsx"
+    },
+    "/folders/$folderSlug/": {
+      "filePath": "folders/$folderSlug/index.tsx"
+    },
+    "/folders/$folderSlug/$promptSlug/edit": {
+      "filePath": "folders/$folderSlug/$promptSlug/edit.tsx",
+      "parent": "/folders/$folderSlug/$promptSlug"
     }
   }
 }

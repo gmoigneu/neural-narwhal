@@ -5,7 +5,8 @@
     "src/renderer/src/**/*",
     "src/renderer/src/**/*.tsx",
     "src/renderer/src/preload.d.ts",
-    "src/preload/*.d.ts"
+    "src/preload/*.d.ts",
+    "src"
   ],
   "compilerOptions": {
     "composite": true,
@@ -18,6 +19,10 @@
       "@main/*": [
         "src/main/src/*"
       ]
-    }
+    },
+    "typeRoots": [
+      "./src/types",
+      "./node_modules/@types"
+    ]
   }
 }

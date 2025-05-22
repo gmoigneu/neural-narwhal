@@ -1,9 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import type { PromptFile, Window } from '@main/index'
 import { BadgeX } from 'lucide-react'
 
-export const Route = createFileRoute('/folders/$folderSlug')({
+export const Route = createFileRoute('/folders/$folderSlug/')({
   component: FolderComponent
 })
 
@@ -26,6 +25,7 @@ function FolderComponent(): React.JSX.Element {
         setFolderName(currentFolder.name)
         const folderPrompts = await (window as Window).api.getPromptsForFolder(folderSlug)
         if (folderPrompts) {
+          console.log('[FolderComponent] folderPrompts:', folderPrompts)
           setPrompts(folderPrompts)
         } else {
           setPrompts([]) // Folder exists but no prompts or error fetching them
@@ -53,7 +53,15 @@ function FolderComponent(): React.JSX.Element {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {prompts.map((prompt) => (
-            <div key={prompt.path} className="bg-white shadow-md rounded-lg p-4 dark:bg-gray-800">
+            <Link
+              to={`/folders/$folderSlug/$promptSlug`}
+              params={{
+                folderSlug: folderSlug,
+                promptSlug: prompt.slug
+              }}
+              key={prompt.path}
+              className="bg-white shadow-md rounded-lg p-4 dark:bg-gray-800"
+            >
               <h2 className="text-xl font-semibold mb-2 dark:text-white">
                 {prompt.name.replace(/\.md$/, '')}
               </h2>
@@ -63,7 +71,7 @@ function FolderComponent(): React.JSX.Element {
               <p className="text-xs text-gray-400 dark:text-gray-500">
                 Last updated: {new Date(prompt.lastIndexed).toLocaleDateString()}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       )}

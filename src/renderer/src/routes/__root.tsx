@@ -29,7 +29,7 @@ function RootComponent(): JSX.Element {
   const originalMatches = useMatches()
   const router = useRouter()
   const currentLocationPath = router.state.location.pathname
-
+  console.log('currentLocationPath', currentLocationPath)
   const generateDefaultBreadcrumb = (pathname: string): string => {
     if (pathname === '/') return 'Home'
     const segments = pathname.split('/').filter(Boolean)
@@ -108,7 +108,9 @@ function RootComponent(): JSX.Element {
                         {!isLast && (
                           <BreadcrumbSeparator
                             className={
-                              currentLocationPath !== '/' && index === 0 && displayMatches.length > 1
+                              currentLocationPath !== '/' &&
+                              index === 0 &&
+                              displayMatches.length > 1
                                 ? 'hidden md:block'
                                 : ''
                             }
