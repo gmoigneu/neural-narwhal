@@ -28,7 +28,7 @@ const data = {
     },
     {
       title: 'Variables',
-      url: '#',
+      url: '/variable',
       icon: DollarSign,
       isActive: true
     },

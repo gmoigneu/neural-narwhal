@@ -63,7 +63,22 @@ const api = {
     }
   },
   getPromptsForFolder: (folderSlug: string): Promise<PromptFilePreload[] | undefined> =>
-    ipcRenderer.invoke('get-prompts-for-folder', folderSlug)
+    ipcRenderer.invoke('get-prompts-for-folder', folderSlug),
+  getVariables: (): Promise<Record<string, string>> => ipcRenderer.invoke('get-variables'),
+  addVariable: (
+    key: string,
+    value: string
+  ): Promise<{ success: boolean; variables?: Record<string, string>; error?: string }> =>
+    ipcRenderer.invoke('add-variable', { key, value }),
+  updateVariable: (
+    key: string,
+    value: string
+  ): Promise<{ success: boolean; variables?: Record<string, string>; error?: string }> =>
+    ipcRenderer.invoke('update-variable', { key, value }),
+  deleteVariable: (
+    key: string
+  ): Promise<{ success: boolean; variables?: Record<string, string>; error?: string }> =>
+    ipcRenderer.invoke('delete-variable', key)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

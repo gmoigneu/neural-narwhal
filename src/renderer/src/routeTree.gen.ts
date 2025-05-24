@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as VariableImport } from './routes/variable'
 import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
 import { Route as FoldersFolderSlugIndexImport } from './routes/folders/$folderSlug/index'
@@ -19,6 +20,12 @@ import { Route as FoldersFolderSlugPromptSlugImport } from './routes/folders/$fo
 import { Route as FoldersFolderSlugPromptSlugEditImport } from './routes/folders/$folderSlug/$promptSlug/edit'
 
 // Create/Update Routes
+
+const VariableRoute = VariableImport.update({
+  id: '/variable',
+  path: '/variable',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const AboutRoute = AboutImport.update({
   id: '/about',
@@ -76,6 +83,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutImport
       parentRoute: typeof rootRoute
     }
+    '/variable': {
+      id: '/variable'
+      path: '/variable'
+      fullPath: '/variable'
+      preLoaderRoute: typeof VariableImport
+      parentRoute: typeof rootRoute
+    }
     '/folders/$folderSlug/$promptSlug': {
       id: '/folders/$folderSlug/$promptSlug'
       path: '/folders/$folderSlug/$promptSlug'
@@ -126,6 +140,7 @@ const FoldersFolderSlugPromptSlugRouteWithChildren =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/variable': typeof VariableRoute
   '/folders/$folderSlug/$promptSlug': typeof FoldersFolderSlugPromptSlugRouteWithChildren
   '/folders/$folderSlug/edit': typeof FoldersFolderSlugEditRoute
   '/folders/$folderSlug': typeof FoldersFolderSlugIndexRoute
@@ -135,6 +150,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/variable': typeof VariableRoute
   '/folders/$folderSlug/$promptSlug': typeof FoldersFolderSlugPromptSlugRouteWithChildren
   '/folders/$folderSlug/edit': typeof FoldersFolderSlugEditRoute
   '/folders/$folderSlug': typeof FoldersFolderSlugIndexRoute
@@ -145,6 +161,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/variable': typeof VariableRoute
   '/folders/$folderSlug/$promptSlug': typeof FoldersFolderSlugPromptSlugRouteWithChildren
   '/folders/$folderSlug/edit': typeof FoldersFolderSlugEditRoute
   '/folders/$folderSlug/': typeof FoldersFolderSlugIndexRoute
@@ -156,6 +173,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/variable'
     | '/folders/$folderSlug/$promptSlug'
     | '/folders/$folderSlug/edit'
     | '/folders/$folderSlug'
@@ -164,6 +182,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/variable'
     | '/folders/$folderSlug/$promptSlug'
     | '/folders/$folderSlug/edit'
     | '/folders/$folderSlug'
@@ -172,6 +191,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/variable'
     | '/folders/$folderSlug/$promptSlug'
     | '/folders/$folderSlug/edit'
     | '/folders/$folderSlug/'
@@ -182,6 +202,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  VariableRoute: typeof VariableRoute
   FoldersFolderSlugPromptSlugRoute: typeof FoldersFolderSlugPromptSlugRouteWithChildren
   FoldersFolderSlugEditRoute: typeof FoldersFolderSlugEditRoute
   FoldersFolderSlugIndexRoute: typeof FoldersFolderSlugIndexRoute
@@ -190,6 +211,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  VariableRoute: VariableRoute,
   FoldersFolderSlugPromptSlugRoute:
     FoldersFolderSlugPromptSlugRouteWithChildren,
   FoldersFolderSlugEditRoute: FoldersFolderSlugEditRoute,
@@ -208,6 +230,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/about",
+        "/variable",
         "/folders/$folderSlug/$promptSlug",
         "/folders/$folderSlug/edit",
         "/folders/$folderSlug/"
@@ -218,6 +241,9 @@ export const routeTree = rootRoute
     },
     "/about": {
       "filePath": "about.tsx"
+    },
+    "/variable": {
+      "filePath": "variable.tsx"
     },
     "/folders/$folderSlug/$promptSlug": {
       "filePath": "folders/$folderSlug/$promptSlug.tsx",

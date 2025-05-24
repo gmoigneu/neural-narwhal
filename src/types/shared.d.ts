@@ -34,6 +34,28 @@ declare global {
       onVaultIndexed: (callback: (indexedFolders: IndexedFolder[]) => void) => () => void
       getIndexedFolders: () => Promise<IndexedFolder[]>
       getPromptsForFolder: (folderSlug: string) => Promise<PromptFile[] | undefined>
+      getVariables: () => Promise<Record<string, string>>
+      addVariable: (
+        key: string,
+        value: string
+      ) => Promise<{
+        success: boolean
+        variables?: Record<string, string>
+        error?: string
+      }>
+      updateVariable: (
+        key: string,
+        value: string
+      ) => Promise<{
+        success: boolean
+        variables?: Record<string, string>
+        error?: string
+      }>
+      deleteVariable: (key: string) => Promise<{
+        success: boolean
+        variables?: Record<string, string>
+        error?: string
+      }>
     }
   }
 }

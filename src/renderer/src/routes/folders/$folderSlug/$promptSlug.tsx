@@ -6,11 +6,18 @@ export const Route = createFileRoute('/folders/$folderSlug/$promptSlug')({
   component: PromptComponent
 })
 
+function substituteVariables(content: string, variables: Record<string, string>): string {
+  return content.replace(/\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/g, (match, varName) => {
+    return Object.prototype.hasOwnProperty.call(variables, varName) ? variables[varName] : match
+  })
+}
+
 function PromptComponent(): React.JSX.Element {
   const [prompt, setPrompt] = useState<PromptFile | null>(null)
   const { folderSlug, promptSlug } = Route.useParams()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [renderedContent, setRenderedContent] = useState<string>('')
 
   useEffect(() => {
     const fetchPrompt = async (): Promise<void> => {
@@ -48,6 +55,18 @@ function PromptComponent(): React.JSX.Element {
     fetchPrompt()
   }, [folderSlug, promptSlug])
 
+  useEffect(() => {
+    const fetchVarsAndRender = async (): Promise<void> => {
+      if (!prompt) {
+        setRenderedContent('')
+        return
+      }
+      const vars = await (window as Window).api.getVariables()
+      setRenderedContent(substituteVariables(prompt.contentBody || '', vars))
+    }
+    fetchVarsAndRender()
+  }, [prompt])
+
   if (loading) {
     return <div className="p-8 text-center text-muted-foreground">Loading prompt...</div>
   }
@@ -82,7 +101,7 @@ function PromptComponent(): React.JSX.Element {
       <div className="mb-2">
         <h2 className="text-lg font-semibold mb-2 dark:text-white">Prompt Content</h2>
         <div className="prose dark:prose-invert max-w-none border rounded p-4 bg-gray-50 dark:bg-gray-800">
-          <ReactMarkdown>{prompt.contentBody || ''}</ReactMarkdown>
+          <ReactMarkdown>{renderedContent}</ReactMarkdown>
         </div>
       </div>
     </div>

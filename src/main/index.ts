@@ -17,6 +17,7 @@ export interface Window {
     getVaultPath: () => Promise<string>
     selectNativeFolder: () => Promise<string>
     saveVaultDirectory: (vaultPath: string) => Promise<void>
+    getVariables: () => Promise<Record<string, string>>
   }
 }
 
@@ -40,6 +41,7 @@ interface IndexedFolder {
 interface AppStore {
   vaultDirectory?: string
   indexedFolders?: IndexedFolder[]
+  variables?: Record<string, string> // Add variables to the store
 }
 
 // Initialize electron-store with the schema
@@ -327,6 +329,53 @@ ipcMain.handle('get-prompts-for-folder', async (_, folderSlug: string) => {
     return folder?.prompts
   }
   return undefined
+})
+
+// --- Variable IPC handlers ---
+ipcMain.handle('get-variables', () => {
+  return store.get('variables') || {}
+})
+ipcMain.handle('add-variable', (_event, { key, value }: { key: string, value: string }) => {
+  if (!key || typeof key !== 'string' || key.length > 255) {
+    return { success: false, error: 'Invalid variable name.' }
+  }
+  if (typeof value !== 'string' || value.length > 255) {
+    return { success: false, error: 'Invalid variable value.' }
+  }
+  const variables = store.get('variables') || {}
+  if (variables[key]) {
+    return { success: false, error: 'Variable already exists.' }
+  }
+  variables[key] = value
+  store.set('variables', variables)
+  return { success: true, variables }
+})
+ipcMain.handle('update-variable', (_event, { key, value }: { key: string, value: string }) => {
+  if (!key || typeof key !== 'string' || key.length > 255) {
+    return { success: false, error: 'Invalid variable name.' }
+  }
+  if (typeof value !== 'string' || value.length > 255) {
+    return { success: false, error: 'Invalid variable value.' }
+  }
+  const variables = store.get('variables') || {}
+  if (!variables[key]) {
+    return { success: false, error: 'Variable does not exist.' }
+  }
+  variables[key] = value
+  store.set('variables', variables)
+  return { success: true, variables }
+})
+ipcMain.handle('delete-variable', (_event, key: string) => {
+  if (!key || typeof key !== 'string') {
+    return { success: false, error: 'Invalid variable name.' }
+  }
+  const variables = store.get('variables') || {}
+  if (!variables[key]) {
+    return { success: false, error: 'Variable does not exist.' }
+  }
+  delete variables[key]
+  store.set('variables', variables)
+  return { success: true, variables }
 })
 
 // In this file you can include the rest of your app's specific main process

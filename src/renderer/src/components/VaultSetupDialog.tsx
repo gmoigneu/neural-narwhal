@@ -37,6 +37,7 @@ export function VaultSetupDialog(): React.JSX.Element {
 
   useEffect(() => {
     const cleanupShowDialog = window.api.onShowVaultSetupDialog(handleShowDialog)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const cleanupVaultReady = window.api.onVaultReady((_path: string) => {
       // If needed, you can use the 'path' variable here.
       // For example: console.log('Vault is ready at path:', path);
@@ -82,7 +83,7 @@ export function VaultSetupDialog(): React.JSX.Element {
     setIsLoading(true)
     setError(undefined)
     try {
-      const result = await window.api.saveVaultDirectory(selectedPath)
+      const result = await (window as Window).api.saveVaultDirectory(selectedPath)
       if (!result.success) {
         setError(result.error || 'Failed to save vault directory.')
       }
