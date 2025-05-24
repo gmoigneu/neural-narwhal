@@ -335,7 +335,7 @@ ipcMain.handle('get-prompts-for-folder', async (_, folderSlug: string) => {
 ipcMain.handle('get-variables', () => {
   return store.get('variables') || {}
 })
-ipcMain.handle('add-variable', (_event, { key, value }: { key: string, value: string }) => {
+ipcMain.handle('add-variable', (_event, { key, value }: { key: string; value: string }) => {
   if (!key || typeof key !== 'string' || key.length > 255) {
     return { success: false, error: 'Invalid variable name.' }
   }
@@ -350,7 +350,7 @@ ipcMain.handle('add-variable', (_event, { key, value }: { key: string, value: st
   store.set('variables', variables)
   return { success: true, variables }
 })
-ipcMain.handle('update-variable', (_event, { key, value }: { key: string, value: string }) => {
+ipcMain.handle('update-variable', (_event, { key, value }: { key: string; value: string }) => {
   if (!key || typeof key !== 'string' || key.length > 255) {
     return { success: false, error: 'Invalid variable name.' }
   }
@@ -377,6 +377,39 @@ ipcMain.handle('delete-variable', (_event, key: string) => {
   store.set('variables', variables)
   return { success: true, variables }
 })
+
+// IPC handler for saving a prompt
+ipcMain.handle(
+  'save-prompt',
+  async (_event, filePath: string, frontmatter: Record<string, unknown>, contentBody: string) => {
+    try {
+      // Generate the markdown content with frontmatter
+      let markdownContent = ''
+
+      if (frontmatter && Object.keys(frontmatter).length > 0) {
+        const yamlString = yaml.dump(frontmatter, { indent: 2 })
+        markdownContent = `---\n${yamlString}---\n\n${contentBody}`
+      } else {
+        markdownContent = contentBody
+      }
+
+      // Write to file
+      await fs.writeFile(filePath, markdownContent, 'utf-8')
+
+      // Update the store by re-indexing the vault
+      const vaultPath = getVaultDirectory()
+      if (vaultPath) {
+        const mainWindow = BrowserWindow.getAllWindows()[0]
+        await indexVaultDirectory(vaultPath, mainWindow)
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error saving prompt:', error)
+      return { success: false, error: `Failed to save prompt: ${(error as Error).message}` }
+    }
+  }
+)
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

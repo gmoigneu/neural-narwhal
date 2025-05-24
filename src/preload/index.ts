@@ -78,7 +78,13 @@ const api = {
   deleteVariable: (
     key: string
   ): Promise<{ success: boolean; variables?: Record<string, string>; error?: string }> =>
-    ipcRenderer.invoke('delete-variable', key)
+    ipcRenderer.invoke('delete-variable', key),
+  savePrompt: (
+    filePath: string,
+    frontmatter: Record<string, unknown>,
+    contentBody: string
+  ): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('save-prompt', filePath, frontmatter, contentBody)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Input } from '../components/ui/input'
 import { Button } from '../components/ui/button'
-import { Dialog } from '../components/ui/dialog'
+import { Dialog, DialogContent } from '../components/ui/dialog'
 import { Label } from '../components/ui/label'
 import { createFileRoute } from '@tanstack/react-router'
 
@@ -152,30 +152,28 @@ const VariableManager: React.FC = () => {
           </tbody>
         </table>
       )}
-      <Dialog open={showEdit} onOpenChange={() => setShowEdit}>
-        <div className="fixed inset-0 flex items-center justify-center bg-black/30 z-50">
-          <div className="bg-white dark:bg-gray-900 rounded shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-bold mb-2">Edit Variable</h2>
-            <form onSubmit={handleEdit}>
-              <Label className="block mb-1">Key</Label>
-              <Input value={editKey || ''} disabled className="mb-2" />
-              <Label className="block mb-1">Value</Label>
-              <Input
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                maxLength={255}
-                className="mb-2"
-              />
-              {editError && <div className="text-red-500 mb-2">{editError}</div>}
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setShowEdit(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">Save</Button>
-              </div>
-            </form>
-          </div>
-        </div>
+      <Dialog open={showEdit} onOpenChange={setShowEdit}>
+        <DialogContent className="sm:max-w-[425px]">
+          <h2 className="text-lg font-bold mb-2">Edit Variable</h2>
+          <form onSubmit={handleEdit}>
+            <Label className="block mb-1">Key</Label>
+            <Input value={editKey || ''} disabled className="mb-2" />
+            <Label className="block mb-1">Value</Label>
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              maxLength={255}
+              className="mb-2"
+            />
+            {editError && <div className="text-red-500 mb-2">{editError}</div>}
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setShowEdit(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save</Button>
+            </div>
+          </form>
+        </DialogContent>
       </Dialog>
       <div className="mt-8 text-gray-500 text-xs">
         Use variables in prompts with <span className="font-mono">{'{{ variable_name }}'}</span>.

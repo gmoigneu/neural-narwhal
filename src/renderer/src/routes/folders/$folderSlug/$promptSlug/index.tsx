@@ -1,14 +1,19 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 
-export const Route = createFileRoute('/folders/$folderSlug/$promptSlug')({
+export const Route = createFileRoute('/folders/$folderSlug/$promptSlug/')({
   component: PromptComponent
 })
 
 function substituteVariables(content: string, variables: Record<string, string>): string {
   return content.replace(/\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/g, (match, varName) => {
-    return Object.prototype.hasOwnProperty.call(variables, varName) ? variables[varName] : match
+    if (Object.prototype.hasOwnProperty.call(variables, varName)) {
+      return `<span style="color: #2563eb; background-color: #eff6ff; padding: 2px 4px; border-radius: 4px; font-weight: 500;">${variables[varName]}</span>`
+    } else {
+      return `<span style="color: #dc2626; background-color: #fef2f2; padding: 2px 4px; border-radius: 4px; font-weight: 500;">${match}</span>`
+    }
   })
 }
 
@@ -78,22 +83,48 @@ function PromptComponent(): React.JSX.Element {
     <div className="p-4">
       {prompt.frontmatter && (
         <>
-          <h1 className="text-2xl font-bold mb-2 dark:text-white">
-            {prompt.frontmatter.name as string}
-          </h1>
+          <div className="flex-row">
+            <h1 className="text-2xl font-bold mb-2 dark:text-white">
+              {prompt.frontmatter.name as string}
+            </h1>
+            <Link
+              to={'/folders/$folderSlug/$promptSlug/edit'}
+              params={{ folderSlug, promptSlug }}
+              className="text-sm text-muted-foreground"
+            >
+              Edit Prompt
+            </Link>
+          </div>
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-2 dark:text-white">Frontmatter</h2>
             <div className="grid grid-cols-1 gap-2">
-              {Object.entries(prompt.frontmatter).map(([key, value]) => (
-                <div key={key} className="flex flex-col mb-1">
-                  <span className="font-medium text-gray-700 dark:text-gray-300">
-                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </span>
-                  <span className="text-gray-900 dark:text-gray-100">
-                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                  </span>
-                </div>
-              ))}
+              {Object.entries(prompt.frontmatter).map(([key, value]) => {
+                const normalizedKey = key.toLowerCase()
+                let displayValue: string
+
+                if (normalizedKey === 'authors' && Array.isArray(value)) {
+                  displayValue = value.join(', ')
+                } else if (normalizedKey === 'model' && typeof value === 'object') {
+                  displayValue = JSON.stringify(value, null, 2)
+                } else if (typeof value === 'object') {
+                  displayValue = JSON.stringify(value, null, 2)
+                } else {
+                  displayValue = String(value)
+                }
+
+                return (
+                  <div key={key} className="flex flex-col mb-1">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      {key.charAt(0).toUpperCase() + key.slice(1)}
+                    </span>
+                    <span
+                      className={`text-gray-900 dark:text-gray-100 ${normalizedKey === 'model' ? 'font-mono text-sm whitespace-pre-wrap' : ''}`}
+                    >
+                      {displayValue}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </>
@@ -101,7 +132,7 @@ function PromptComponent(): React.JSX.Element {
       <div className="mb-2">
         <h2 className="text-lg font-semibold mb-2 dark:text-white">Prompt Content</h2>
         <div className="prose dark:prose-invert max-w-none border rounded p-4 bg-gray-50 dark:bg-gray-800">
-          <ReactMarkdown>{renderedContent}</ReactMarkdown>
+          <ReactMarkdown rehypePlugins={[rehypeRaw]}>{renderedContent}</ReactMarkdown>
         </div>
       </div>
     </div>

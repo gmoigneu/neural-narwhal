@@ -56,6 +56,14 @@ declare global {
         variables?: Record<string, string>
         error?: string
       }>
+      savePrompt: (
+        filePath: string,
+        frontmatter: Record<string, unknown>,
+        contentBody: string
+      ) => Promise<{
+        success: boolean
+        error?: string
+      }>
     }
   }
 }
