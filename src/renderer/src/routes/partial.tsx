@@ -190,4 +190,3 @@ export default PartialManager
 export const Route = createFileRoute('/partial')({
   component: PartialManager
 })
-

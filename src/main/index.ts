@@ -2,8 +2,9 @@ import { app, shell, BrowserWindow, dialog, ipcMain } from 'electron'
 import { join, extname } from 'node:path'
 import fs from 'fs/promises'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/electron-prompts.png?asset'
-import Store from 'electron-store'
+import icon from '../../resources/app-icon.png?asset'
+// @ts-ignore - ESM module resolution issue
+import ElectronStore from 'electron-store'
 import slugify from '@sindresorhus/slugify'
 import yaml from 'js-yaml'
 
@@ -46,12 +47,13 @@ interface AppStore {
 }
 
 // Initialize electron-store with the schema
-const store = new Store<AppStore>({
+const store = new ElectronStore<AppStore>({
   defaults: {
     vaultDirectory: undefined,
     indexedFolders: [] // Default to an empty array
   }
-})
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}) as any
 
 // Function to get the vault directory
 function getVaultDirectory(): string | undefined {
