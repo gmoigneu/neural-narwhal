@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Available tools
+
+You can use Context7 mcp to get documentation on code librairies.
+
 ## Development Commands
 
 **Package Manager**: pnpm (required)
@@ -28,6 +32,8 @@ pnpm build:linux  # Linux
 pnpm lint
 pnpm format
 ```
+
+Run `pnpm lint --fix` after you code something and before testing.
 
 ## Architecture Overview
 
@@ -72,7 +78,7 @@ interface PromptFile {
 
 interface IndexedFolder {
   name: string        // Folder display name
-  path: string        // Full folder path  
+  path: string        // Full folder path
   slug: string        // URL-safe folder slug
   prompts: PromptFile[]
 }

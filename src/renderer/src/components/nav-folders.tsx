@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Folder as FolderIcon, MoreHorizontal, Pencil, Trash2, type LucideIcon } from 'lucide-react'
+import { Folder as FolderIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 
 import {
   DropdownMenu,
@@ -32,7 +32,7 @@ export function NavFolders(): React.JSX.Element {
       try {
         setError(null)
         console.log('nav-folders: Fetching indexed folders...')
-        const fetchedFolders = await (window as Window).api.getIndexedFolders()
+        const fetchedFolders = await (window as unknown as Window).api.getIndexedFolders()
         console.log('nav-folders: Fetched indexed folders:', fetchedFolders)
         if (fetchedFolders) {
           setFolders(fetchedFolders)
@@ -48,19 +48,19 @@ export function NavFolders(): React.JSX.Element {
 
     fetchAndSetFolders()
 
-    const cleanupVaultIndexed = (window as Window).api.onVaultIndexed((updatedFolders) => {
-      console.log('nav-folders: Vault re-indexed, updating folders:', updatedFolders)
-      setError(null)
-      if (updatedFolders) {
-        setFolders(updatedFolders)
-      } else {
-        setFolders([])
+    const cleanupVaultIndexed = (window as unknown as Window).api.onVaultIndexed(
+      (updatedFolders) => {
+        console.log('nav-folders: Vault re-indexed, updating folders:', updatedFolders)
+        setError(null)
+        if (updatedFolders) {
+          setFolders(updatedFolders)
+        } else {
+          setFolders([])
+        }
       }
-    })
+    )
 
-    return () => {
-      cleanupVaultIndexed()
-    }
+    return cleanupVaultIndexed
   }, [])
 
   if (error) {

@@ -9,7 +9,7 @@ export const Route = createFileRoute('/folders/$folderSlug/')({
 function FolderComponent(): React.JSX.Element {
   const { folderSlug } = Route.useParams()
   const [prompts, setPrompts] = useState<PromptFile[]>([]) // PromptFile type from preload.d.ts
-  const [folderName, setFolderName] = useState<string>('')
+  const [, setFolderName] = useState<string>('')
 
   useEffect(() => {
     const fetchPromptsAndFolderInfo = async (): Promise<void> => {
