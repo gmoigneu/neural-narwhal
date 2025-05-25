@@ -87,7 +87,7 @@ interface IndexedFolder {
 ## Development Guidelines from .cursorrules
 
 ### Project Overview
-- **App Name**: Prompt Manager
+- **App Name**: Electron Prompt
 - **Platform**: Electron with Vite
 - **Storage**: Local folder storage (user-selected) using Prompty specification
 - **Configuration Storage**: Uses `electron-store` for persistent application settings, managed in the main process

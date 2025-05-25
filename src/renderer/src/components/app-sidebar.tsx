@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Command, LifeBuoy, Send, Settings2, SquareTerminal, DollarSign } from 'lucide-react'
+import { LifeBuoy, Send, Settings2, SquareTerminal, DollarSign } from 'lucide-react'
 
 import { NavMain } from '@renderer/components/nav-main'
 import { NavFolders } from '@renderer/components/nav-folders'
@@ -17,6 +17,7 @@ import {
 } from '@renderer/components/ui/sidebar'
 import { NavSearch } from './nav-search'
 import { Link } from '@tanstack/react-router'
+import icon from '../../../../resources/app-icon.png?asset'
 
 const data = {
   navMain: [
@@ -60,8 +61,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>): 
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <a href="#">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Command className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg text-sidebar-primary-foreground">
+                  <img src={icon} alt="Electron Prompt" className="size-8" />
                 </div>
                 <Link to="/" className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Neural Narwhal</span>
