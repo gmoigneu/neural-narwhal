@@ -64,6 +64,28 @@ declare global {
         success: boolean
         error?: string
       }>
+      getPartials: () => Promise<Record<string, string>>
+      addPartial: (
+        name: string,
+        content: string
+      ) => Promise<{
+        success: boolean
+        partials?: Record<string, string>
+        error?: string
+      }>
+      updatePartial: (
+        name: string,
+        content: string
+      ) => Promise<{
+        success: boolean
+        partials?: Record<string, string>
+        error?: string
+      }>
+      deletePartial: (name: string) => Promise<{
+        success: boolean
+        partials?: Record<string, string>
+        error?: string
+      }>
     }
   }
 }

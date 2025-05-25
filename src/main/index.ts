@@ -31,7 +31,7 @@ interface PromptFile {
   lastIndexed: number // Timestamp of the last indexing
 }
 
-interface IndexedFolder {
+export interface IndexedFolder {
   name: string // e.g., "Test folder"
   path: string // Full path to the folder
   slug: string // Slugified path
@@ -42,6 +42,7 @@ interface AppStore {
   vaultDirectory?: string
   indexedFolders?: IndexedFolder[]
   variables?: Record<string, string> // Add variables to the store
+  partials?: Record<string, string> // Add partials to the store
 }
 
 // Initialize electron-store with the schema
@@ -376,6 +377,72 @@ ipcMain.handle('delete-variable', (_event, key: string) => {
   delete variables[key]
   store.set('variables', variables)
   return { success: true, variables }
+})
+
+// IPC handlers for partials management
+ipcMain.handle('get-partials', async () => {
+  const partials = store.get('partials', {})
+  return partials
+})
+
+ipcMain.handle(
+  'add-partial',
+  async (_event, { name, content }: { name: string; content: string }) => {
+    if (!name || typeof name !== 'string' || name.length > 100) {
+      return {
+        success: false,
+        error: 'Invalid partial name. Must be a string with 100 characters or less.'
+      }
+    }
+    if (!content || typeof content !== 'string' || content.length > 5000) {
+      return {
+        success: false,
+        error: 'Invalid partial content. Must be a string with 5000 characters or less.'
+      }
+    }
+    const partials = store.get('partials', {})
+    if (partials[name]) {
+      return { success: false, error: 'Partial with this name already exists.' }
+    }
+    partials[name] = content
+    store.set('partials', partials)
+    return { success: true, partials }
+  }
+)
+
+ipcMain.handle(
+  'update-partial',
+  async (_event, { name, content }: { name: string; content: string }) => {
+    if (!name || typeof name !== 'string') {
+      return { success: false, error: 'Invalid partial name.' }
+    }
+    if (!content || typeof content !== 'string' || content.length > 5000) {
+      return {
+        success: false,
+        error: 'Invalid partial content. Must be a string with 5000 characters or less.'
+      }
+    }
+    const partials = store.get('partials', {})
+    if (!partials[name]) {
+      return { success: false, error: 'Partial does not exist.' }
+    }
+    partials[name] = content
+    store.set('partials', partials)
+    return { success: true, partials }
+  }
+)
+
+ipcMain.handle('delete-partial', async (_event, name: string) => {
+  if (!name || typeof name !== 'string') {
+    return { success: false, error: 'Invalid partial name.' }
+  }
+  const partials = store.get('partials', {})
+  if (!partials[name]) {
+    return { success: false, error: 'Partial does not exist.' }
+  }
+  delete partials[name]
+  store.set('partials', partials)
+  return { success: true, partials }
 })
 
 // IPC handler for saving a prompt

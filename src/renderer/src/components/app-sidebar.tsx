@@ -22,7 +22,7 @@ const data = {
   navMain: [
     {
       title: 'Partials',
-      url: '#',
+      url: '/partial',
       icon: SquareTerminal,
       isActive: true
     },

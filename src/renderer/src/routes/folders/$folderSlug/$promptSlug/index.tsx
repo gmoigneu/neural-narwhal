@@ -17,6 +17,36 @@ function substituteVariables(content: string, variables: Record<string, string>)
   })
 }
 
+function substitutePartials(
+  content: string,
+  partials: Record<string, string>,
+  variables: Record<string, string>,
+  depth: number = 0
+): string {
+  // Prevent infinite recursion
+  if (depth > 5) {
+    console.warn('Maximum partial nesting depth reached')
+    return content
+  }
+
+  // Replace partials with syntax {{> partial_name }}
+  let result = content.replace(/\{\{>\s*([a-zA-Z0-9_-]+)\s*\}\}/g, (match, partialName) => {
+    if (Object.prototype.hasOwnProperty.call(partials, partialName)) {
+      const partialContent = partials[partialName]
+      // Recursively process partials within partials
+      const processedPartial = substitutePartials(partialContent, partials, variables, depth + 1)
+      return `<div style="border-left: 3px solid #8b5cf6; padding-left: 12px; margin: 8px 0;">${processedPartial}</div>`
+    } else {
+      return `<span style="color: #dc2626; background-color: #fef2f2; padding: 2px 4px; border-radius: 4px; font-weight: 500;">${match}</span>`
+    }
+  })
+
+  // Substitute variables after processing partials
+  result = substituteVariables(result, variables)
+
+  return result
+}
+
 function PromptComponent(): React.JSX.Element {
   const [prompt, setPrompt] = useState<PromptFile | null>(null)
   const { folderSlug, promptSlug } = Route.useParams()
@@ -66,8 +96,12 @@ function PromptComponent(): React.JSX.Element {
         setRenderedContent('')
         return
       }
-      const vars = await (window as Window).api.getVariables()
-      setRenderedContent(substituteVariables(prompt.contentBody || '', vars))
+      const [vars, parts] = await Promise.all([
+        (window as Window).api.getVariables(),
+        (window as Window).api.getPartials()
+      ])
+      const processedContent = substitutePartials(prompt.contentBody || '', parts, vars)
+      setRenderedContent(processedContent)
     }
     fetchVarsAndRender()
   }, [prompt])

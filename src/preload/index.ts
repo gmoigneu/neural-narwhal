@@ -84,7 +84,22 @@ const api = {
     frontmatter: Record<string, unknown>,
     contentBody: string
   ): Promise<{ success: boolean; error?: string }> =>
-    ipcRenderer.invoke('save-prompt', filePath, frontmatter, contentBody)
+    ipcRenderer.invoke('save-prompt', filePath, frontmatter, contentBody),
+  getPartials: (): Promise<Record<string, string>> => ipcRenderer.invoke('get-partials'),
+  addPartial: (
+    name: string,
+    content: string
+  ): Promise<{ success: boolean; partials?: Record<string, string>; error?: string }> =>
+    ipcRenderer.invoke('add-partial', { name, content }),
+  updatePartial: (
+    name: string,
+    content: string
+  ): Promise<{ success: boolean; partials?: Record<string, string>; error?: string }> =>
+    ipcRenderer.invoke('update-partial', { name, content }),
+  deletePartial: (
+    name: string
+  ): Promise<{ success: boolean; partials?: Record<string, string>; error?: string }> =>
+    ipcRenderer.invoke('delete-partial', name)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
