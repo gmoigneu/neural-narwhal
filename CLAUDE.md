@@ -39,6 +39,8 @@ Run `pnpm lint --fix` after you code something and before testing.
 
 **Neural Narwhal** is a local-first prompt manager built with Electron + React + TanStack Router. The application follows the Prompty specification for prompt storage and management.
 
+The Prompty specification is available in `Prompty.yaml`
+
 ### Tech Stack
 - **Framework**: Electron 35+ with Vite for bundling
 - **Frontend**: React 19 with TypeScript in strict mode
